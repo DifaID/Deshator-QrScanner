@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QR Code Studio & Scanner - DESHATOR</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Library QR Code Styling untuk Dukungan Pola Garis -->
+  <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.8/lib/qr-code-styling.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -21,9 +22,9 @@
 
     .form-group { margin-bottom: 15px; }
     label { display: block; font-size: 0.85rem; color: #38bdf8; margin-bottom: 6px; font-weight: bold; }
-    input[type="text"], textarea, input[type="file"] { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #fff; font-size: 0.9rem; }
+    input[type="text"], textarea, input[type="file"], select { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #fff; font-size: 0.9rem; }
     textarea { resize: vertical; min-height: 80px; }
-    input:focus, textarea:focus { outline: none; border-color: #38bdf8; }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: #38bdf8; }
 
     .btn-group { display: flex; gap: 8px; margin-top: 8px; }
     button { flex: 1; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
@@ -36,7 +37,7 @@
     #qrcode-box { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 20px; padding: 15px; background: #fff; border-radius: 12px; width: fit-content; margin-left: auto; margin-right: auto; }
     #qrcode img, #qrcode canvas { display: block; }
     
-    /* Perbaikan responsif area scanner */
+    /* Area responsive scanner */
     .reader-wrapper { width: 100%; border-radius: 12px; overflow: hidden; background: #0f172a; border: 1px solid #334155; display: flex; justify-content: center; align-items: center; }
     #reader { width: 100%; max-height: 70vh; overflow: hidden; }
     #reader img, #reader video { max-width: 100% !important; height: auto !important; object-fit: contain !important; margin: 0 auto; display: block; }
@@ -65,6 +66,19 @@
 
   <!-- SEKSI GENERATE QR -->
   <div id="section-generate" class="content-section active">
+    
+    <!-- PILIHAN GAYA QR -->
+    <div class="form-group">
+      <label>Pilih Gaya / Model QR Code:</label>
+      <select id="qrStyleSelect">
+        <option value="square">QR Umum (Kotak Standard)</option>
+        <option value="lines">QR Garis-Garis (Line Style)</option>
+        <option value="dots">QR Titik-Titik (Dots Style)</option>
+      </select>
+    </div>
+
+    <hr style="border-color: #334155; margin: 15px 0;">
+
     <div class="form-group">
       <label>1. Buat dari Teks / Link:</label>
       <textarea id="textInput" placeholder="Masukkan pesan, nomor HP, atau link web..."></textarea>
@@ -93,7 +107,6 @@
 
   <!-- SEKSI SCANNER QR -->
   <div id="section-scan" class="content-section">
-    <!-- SCANNER KAMERA ERA -->
     <div class="reader-wrapper">
       <div id="reader"></div>
     </div>
@@ -102,7 +115,6 @@
 
     <hr style="border-color: #334155; margin: 20px 0;">
 
-    <!-- SCANNER DARI GALERI -->
     <div class="form-group">
       <label>Atau Scan dari Gambar Galeri:</label>
       <input type="file" id="qrFileInput" accept="image/*" onchange="scanQRFromImage()">
@@ -126,6 +138,7 @@
 
 <script>
   let html5QrcodeScanner = null;
+  let qrCodeStylingObj = null;
 
   function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -207,44 +220,43 @@
     document.getElementById('qrcode').innerHTML = "";
   }
 
-  // Render QR ke Layar
+  // Render QR ke Layar (Mendukung Opsi Garis/Lines)
   function renderQR(data) {
     const box = document.getElementById('qrcode-box');
     const container = document.getElementById('qrcode');
+    const selectedStyle = document.getElementById('qrStyleSelect').value;
+
     container.innerHTML = "";
     box.style.display = "flex";
 
-    new QRCode(container, {
-      text: data,
-      width: 200,
-      height: 200,
-      colorDark : "#000000",
-      colorLight : "#ffffff",
-      correctLevel : QRCode.CorrectLevel.L
+    qrCodeStylingObj = new QRCodeStyling({
+      width: 210,
+      height: 210,
+      type: "canvas",
+      data: data,
+      dotsOptions: {
+        color: "#000000",
+        type: selectedStyle // "square", "lines", atau "dots"
+      },
+      cornersSquareOptions: {
+        type: selectedStyle === "lines" ? "extra-rounded" : "square",
+        color: "#000000"
+      },
+      backgroundOptions: {
+        color: "#ffffff"
+      }
     });
+
+    qrCodeStylingObj.append(container);
   }
 
   // Download Gambar QR
   function downloadQR() {
-    const imgElement = document.querySelector('#qrcode img');
-    const canvasElement = document.querySelector('#qrcode canvas');
-
-    let imageSrc = "";
-
-    if (imgElement && imgElement.src) {
-      imageSrc = imgElement.src;
-    } else if (canvasElement) {
-      imageSrc = canvasElement.toDataURL("image/png");
+    if (qrCodeStylingObj) {
+      qrCodeStylingObj.download({ name: "QR_Code_DESHATOR", extension: "png" });
     } else {
-      return alert("Gagal mengunduh, buat QR code terlebih dahulu!");
+      alert("Gagal mengunduh, buat QR code terlebih dahulu!");
     }
-
-    const a = document.createElement('a');
-    a.href = imageSrc;
-    a.download = 'QR_Code_DESHATOR.png';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
   }
 
   // Mulai Kamera Scanner
