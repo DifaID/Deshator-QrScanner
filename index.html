@@ -3,76 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lacak Foto Sosmed</title>
+  <title>Pengunduh & Tools Story WA</title>
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
     .card { background: #1e293b; padding: 30px; border-radius: 12px; width: 100%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; }
-    h2 { margin-top: 0; color: #38bdf8; }
+    h2 { margin-top: 0; color: #22c55e; }
     p { color: #94a3b8; font-size: 0.85rem; margin-bottom: 20px; }
     .option-box { background: #0f172a; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #334155; }
-    label { display: block; text-align: left; font-size: 0.85rem; color: #38bdf8; margin-bottom: 8px; font-weight: bold; }
-    input[type="file"], input[type="text"] { width: 100%; padding: 10px; border: 1px solid #334155; border-radius: 6px; background: #1e293b; color: #fff; font-size: 0.9rem; }
-    button { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; }
-    button:hover { background: #0369a1; }
+    label { display: block; text-align: left; font-size: 0.85rem; color: #22c55e; margin-bottom: 8px; font-weight: bold; }
+    input[type="text"], input[type="file"] { width: 100%; padding: 10px; border: 1px solid #334155; border-radius: 6px; background: #1e293b; color: #fff; font-size: 0.9rem; }
+    button { width: 100%; padding: 12px; background: #16a34a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+    button:hover { background: #15803d; }
     .divider { color: #64748b; font-size: 0.8rem; margin: 15px 0; font-weight: bold; }
-    #preview { max-width: 100%; max-height: 150px; margin-top: 10px; border-radius: 6px; display: none; }
+    #preview { max-width: 100%; max-height: 200px; margin-top: 10px; border-radius: 6px; display: none; }
   </style>
 </head>
 <body>
 
   <div class="card">
-    <h2>Lacak Foto Sosmed</h2>
-    <p>Cari profil media sosial pelaku/pencuri menggunakan foto.</p>
+    <h2>WA Story Downloader</h2>
+    <p>Simpan gambar/video Story WhatsApp ke galeri HP kamu.</p>
     
-    <!-- CARA 1: UPLOAD DARI GALERI -->
+    <!-- FITUR 1: SIMPAN GAMBAR/VIDEO STORY -->
     <div class="option-box">
-      <label>1. Pilih Foto dari Galeri:</label>
-      <input type="file" id="fileInput" accept="image/*" onchange="previewImage()">
-      <img id="preview" alt="Preview Foto">
-      <button onclick="lacakDariGaleri()">Lacak Foto Galeri</button>
+      <label>1. Simpan Foto/Video Story ke HP:</label>
+      <input type="file" id="mediaInput" accept="image/*,video/*" onchange="previewMedia()">
+      <img id="preview" alt="Preview Story">
+      <a id="downloadBtn" style="display:none;" download="story-wa.jpg">
+        <button style="background:#0284c7;">Download Media</button>
+      </a>
     </div>
 
     <div class="divider">--- ATAU ---</div>
 
-    <!-- CARA 2: PAKAI LINK FOTO -->
+    <!-- FITUR 2: BUKA WA WEB -->
     <div class="option-box">
-      <label>2. Pakai Link / URL Foto:</label>
-      <input type="text" id="imgUrl" placeholder="https://domain.com/foto.jpg">
-      <button onclick="lacakDariUrl()">Lacak dari Link</button>
+      <label>2. Akses WhatsApp Web:</label>
+      <button onclick="bukaWAWeb()">Buka WA Web di Browser</button>
     </div>
   </div>
 
   <script>
-    function previewImage() {
-      const file = document.getElementById('fileInput').files[0];
+    function previewMedia() {
+      const file = document.getElementById('mediaInput').files[0];
       const preview = document.getElementById('preview');
+      const downloadBtn = document.getElementById('downloadBtn');
+
       if (file) {
-        preview.src = URL.createObjectURL(file);
+        const fileUrl = URL.createObjectURL(file);
+        preview.src = fileUrl;
         preview.style.display = 'block';
+        
+        // Atur link download
+        downloadBtn.href = fileUrl;
+        downloadBtn.download = file.name;
+        downloadBtn.style.display = 'block';
       }
     }
 
-    // Fungsi Lacak dari Galeri
-    function lacakDariGaleri() {
-      const fileInput = document.getElementById('fileInput');
-      if (!fileInput.files || fileInput.files.length === 0) {
-        alert("Pilih foto dari galeri terlebih dahulu!");
-        return;
-      }
-      // Membuka mesin pencari gambar TinEye khusus upload galeri
-      window.open('https://tineye.com/', '_blank');
-    }
-
-    // Fungsi Lacak dari Link URL (Google Lens)
-    function lacakDariUrl() {
-      const url = document.getElementById('imgUrl').value.trim();
-      if (!url) {
-        alert("Masukkan URL foto terlebih dahulu!");
-        return;
-      }
-      const targetUrl = `https://lens.google.com/uploadbyurl?url=${encodeURIComponent(url)}`;
-      window.open(targetUrl, '_blank');
+    function bukaWAWeb() {
+      window.open('https://web.whatsapp.com', '_blank');
     }
   </script>
 
