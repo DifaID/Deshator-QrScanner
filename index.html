@@ -90,9 +90,18 @@
 
   <!-- SEKSI SCANNER QR -->
   <div id="section-scan" class="content-section">
+    <!-- SCANNER KAMERA -->
     <div id="reader"></div>
     <button id="stopBtn" onclick="stopScanner()" style="display:none; background: #dc2626; margin-top: 10px; width:100%;">Matikan Kamera</button>
     <button id="startBtn" onclick="startScanner()" style="margin-top: 10px; width:100%;">Buka Kamera Scanner</button>
+
+    <hr style="border-color: #334155; margin: 20px 0;">
+
+    <!-- SCANNER DARI GALERI -->
+    <div class="form-group">
+      <label>Atau Scan dari Gambar Galeri:</label>
+      <input type="file" id="qrFileInput" accept="image/*" onchange="scanQRFromImage()">
+    </div>
 
     <div id="scanResult" class="result-box" style="display:none;">
       <div class="result-title">Hasil Pembacaan:</div>
@@ -139,7 +148,7 @@
     hideQR();
   }
 
-  // Buat QR dari File Foto (Dengan kompresi otomatis agar data muat)
+  // Buat QR dari File Foto (Dengan kompresi otomatis)
   function generateImageQR() {
     const fileInput = document.getElementById('imageInput');
     if(!fileInput.files || fileInput.files.length === 0) return alert("Pilih foto dari galeri terlebih dahulu!");
@@ -151,7 +160,6 @@
       const img = new Image();
       img.src = e.target.result;
       img.onload = function() {
-        // Mengecilkan ukuran foto agar tidak melebihi kapasitas QR code
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const maxDim = 80; 
@@ -174,7 +182,6 @@
         canvas.height = height;
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Konversi ke format ringan
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
         renderQR(compressedBase64);
       }
@@ -246,7 +253,24 @@
     }
   }
 
-  // Sukses Membaca QR
+  // Scan Gambar QR dari Galeri
+  function scanQRFromImage() {
+    const fileInput = document.getElementById('qrFileInput');
+    if(!fileInput.files || fileInput.files.length === 0) return;
+
+    const file = fileInput.files[0];
+    const html5QrCode = new Html5Qrcode("reader");
+
+    html5QrCode.scanFile(file, true)
+      .then(decodedText => {
+        onScanSuccess(decodedText);
+      })
+      .catch(err => {
+        alert("Gagal membaca QR Code dari gambar ini. Pastikan gambar QR jernih.");
+      });
+  }
+
+  // Sukses Membaca QR (Kamera & Galeri)
   function onScanSuccess(decodedText) {
     const resultBox = document.getElementById('scanResult');
     const resultText = document.getElementById('resultText');
