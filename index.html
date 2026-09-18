@@ -9,33 +9,58 @@
     body { background-color: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
     .card { background: #1e293b; padding: 30px; border-radius: 12px; width: 100%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; }
     h2 { margin-top: 0; color: #38bdf8; }
-    p { color: #94a3b8; font-size: 0.95rem; }
-    input[type="text"] { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #334155; border-radius: 6px; background: #0f172a; color: #fff; font-size: 0.9rem; }
-    input[type="text"]:focus { outline: none; border-color: #38bdf8; }
-    button { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px; }
+    .option-box { background: #0f172a; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #334155; }
+    label { display: block; text-align: left; font-size: 0.85rem; color: #38bdf8; margin-bottom: 8px; font-weight: bold; }
+    input[type="file"], input[type="text"] { width: 100%; padding: 10px; border: 1px solid #334155; border-radius: 6px; background: #1e293b; color: #fff; font-size: 0.9rem; }
+    button { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; }
     button:hover { background: #0369a1; }
+    .divider { color: #64748b; font-size: 0.8rem; margin: 15px 0; font-weight: bold; }
   </style>
 </head>
 <body>
 
   <div class="card">
     <h2>Lacak Foto Sosmed</h2>
-    <p>Masukkan link/URL foto untuk mencari akun media sosial atau jejak digitalnya.</p>
+    <p>Cari akun media sosial atau jejak digital foto dari galeri atau link.</p>
     
-    <input type="text" id="imgUrl" placeholder="https://domain.com/foto.jpg">
-    <button onclick="lacakFoto()">Cari dengan Google Lens</button>
+    <!-- CARA 1: UPLOAD DARI GALERI -->
+    <div class="option-box">
+      <label>1. Dari Galeri / File HP:</label>
+      <input type="file" id="fileInput" accept="image/*">
+      <button onclick="lacakDariGaleri()">Lacak Foto Galeri</button>
+    </div>
+
+    <div class="divider">--- ATAU ---</div>
+
+    <!-- CARA 2: PAKAI LINK FOTO -->
+    <div class="option-box">
+      <label>2. Pakai Link / URL Foto:</label>
+      <input type="text" id="imgUrl" placeholder="https://domain.com/foto.jpg">
+      <button onclick="lacakDariUrl()">Lacak dari Link</button>
+    </div>
   </div>
 
   <script>
-    function lacakFoto() {
+    // Fungsi Lacak dari Galeri HP
+    function lacakDariGaleri() {
+      const fileInput = document.getElementById('fileInput');
+      if (!fileInput.files || fileInput.files.length === 0) {
+        alert("Pilih foto dari galeri terlebih dahulu!");
+        return;
+      }
+
+      // Membuka halaman upload Google Lens langsung
+      window.open('https://lens.google.com/', '_blank');
+    }
+
+    // Fungsi Lacak dari Link URL
+    function lacakDariUrl() {
       const url = document.getElementById('imgUrl').value.trim();
-      
       if (!url) {
         alert("Masukkan URL foto terlebih dahulu!");
         return;
       }
-
-      // Langsung buka Google Lens di tab baru
       const targetUrl = `https://lens.google.com/uploadbyurl?url=${encodeURIComponent(url)}`;
       window.open(targetUrl, '_blank');
     }
