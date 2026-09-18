@@ -3,69 +3,228 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pengunduh & Tools Story WA</title>
+  <title>QR Code Studio & Scanner - DESHATOR</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
-    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-    .card { background: #1e293b; padding: 30px; border-radius: 12px; width: 100%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; }
-    h2 { margin-top: 0; color: #22c55e; }
-    p { color: #94a3b8; font-size: 0.85rem; margin-bottom: 20px; }
-    .option-box { background: #0f172a; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #334155; }
-    label { display: block; text-align: left; font-size: 0.85rem; color: #22c55e; margin-bottom: 8px; font-weight: bold; }
-    input[type="text"], input[type="file"] { width: 100%; padding: 10px; border: 1px solid #334155; border-radius: 6px; background: #1e293b; color: #fff; font-size: 0.9rem; }
-    button { width: 100%; padding: 12px; background: #16a34a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; }
-    button:hover { background: #15803d; }
-    .divider { color: #64748b; font-size: 0.8rem; margin: 15px 0; font-weight: bold; }
-    #preview { max-width: 100%; max-height: 200px; margin-top: 10px; border-radius: 6px; display: none; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #0f172a; color: #f8fafc; min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: center; }
+    .container { width: 100%; max-width: 500px; background: #1e293b; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    h1 { text-align: center; color: #38bdf8; font-size: 1.5rem; margin-bottom: 20px; }
+    
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: #334155; color: #94a3b8; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+    .tab-btn.active { background: #0284c7; color: #fff; }
+
+    .content-section { display: none; }
+    .content-section.active { display: block; }
+
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-size: 0.85rem; color: #38bdf8; margin-bottom: 6px; font-weight: bold; }
+    input[type="text"], textarea, input[type="file"] { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #fff; font-size: 0.9rem; }
+    textarea { resize: vertical; min-height: 80px; }
+    input:focus, textarea:focus { outline: none; border-color: #38bdf8; }
+
+    button { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 5px; }
+    button:hover { background: #0369a1; }
+    button.secondary { background: #475569; }
+    button.secondary:hover { background: #334155; }
+
+    #qrcode-box { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 20px; padding: 15px; background: #fff; border-radius: 12px; width: fit-content; margin-left: auto; margin-right: auto; }
+    #qrcode img { display: block; }
+    
+    #reader { width: 100%; border-radius: 12px; overflow: hidden; background: #0f172a; border: 1px solid #334155; }
+    
+    .result-box { margin-top: 15px; padding: 15px; background: #0f172a; border-radius: 8px; border: 1px solid #334155; word-break: break-all; }
+    .result-title { font-size: 0.8rem; color: #38bdf8; font-weight: bold; margin-bottom: 5px; }
+    
+    .wifi-details { background: #1e293b; padding: 10px; border-radius: 6px; margin-top: 10px; border: 1px solid #0284c7; }
+    .wifi-details p { margin-bottom: 5px; font-size: 0.9rem; }
+
+    /* STYLE KEPEMILIKAN WEBSITE (FOOTER) */
+    .footer { margin-top: 25px; padding-top: 15px; border-top: 1px solid #334155; text-align: center; }
+    .footer p { font-size: 0.8rem; color: #94a3b8; margin-bottom: 3px; }
+    .footer .owner-title { font-weight: bold; color: #38bdf8; font-size: 0.9rem; }
+    .footer .owner-ig { color: #f43f5e; font-weight: bold; }
   </style>
 </head>
 <body>
 
-  <div class="card">
-    <h2>WA Story Downloader</h2>
-    <p>Simpan gambar/video Story WhatsApp ke galeri HP kamu.</p>
-    
-    <!-- FITUR 1: SIMPAN GAMBAR/VIDEO STORY -->
-    <div class="option-box">
-      <label>1. Simpan Foto/Video Story ke HP:</label>
-      <input type="file" id="mediaInput" accept="image/*,video/*" onchange="previewMedia()">
-      <img id="preview" alt="Preview Story">
-      <a id="downloadBtn" style="display:none;" download="story-wa.jpg">
-        <button style="background:#0284c7;">Download Media</button>
-      </a>
+<div class="container">
+  <h1>QR Code Studio</h1>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('generate')">Buat QR</button>
+    <button class="tab-btn" onclick="switchTab('scan')">Scan QR</button>
+  </div>
+
+  <!-- SEKSI GENERATE QR -->
+  <div id="section-generate" class="content-section active">
+    <div class="form-group">
+      <label>1. Buat dari Teks / Link:</label>
+      <textarea id="textInput" placeholder="Masukkan pesan, nomor HP, atau link web..."></textarea>
+      <button onclick="generateTextQR()">Buat QR Teks</button>
     </div>
 
-    <div class="divider">--- ATAU ---</div>
+    <hr style="border-color: #334155; margin: 20px 0;">
 
-    <!-- FITUR 2: BUKA WA WEB -->
-    <div class="option-box">
-      <label>2. Akses WhatsApp Web:</label>
-      <button onclick="bukaWAWeb()">Buka WA Web di Browser</button>
+    <div class="form-group">
+      <label>2. Buat dari Foto Galeri (Link/Base64):</label>
+      <input type="file" id="imageInput" accept="image/*">
+      <button onclick="generateImageQR()" class="secondary">Buat QR Foto</button>
+    </div>
+
+    <div id="qrcode-box" style="display:none;">
+      <div id="qrcode"></div>
+      <button onclick="downloadQR()" style="margin-top: 10px; background: #16a34a;">Download Gambar QR</button>
     </div>
   </div>
 
-  <script>
-    function previewMedia() {
-      const file = document.getElementById('mediaInput').files[0];
-      const preview = document.getElementById('preview');
-      const downloadBtn = document.getElementById('downloadBtn');
+  <!-- SEKSI SCANNER QR -->
+  <div id="section-scan" class="content-section">
+    <div id="reader"></div>
+    <button id="stopBtn" onclick="stopScanner()" style="display:none; background: #dc2626; margin-top: 10px;">Matikan Kamera</button>
+    <button id="startBtn" onclick="startScanner()" style="margin-top: 10px;">Buka Kamera Scanner</button>
 
-      if (file) {
-        const fileUrl = URL.createObjectURL(file);
-        preview.src = fileUrl;
-        preview.style.display = 'block';
-        
-        // Atur link download
-        downloadBtn.href = fileUrl;
-        downloadBtn.download = file.name;
-        downloadBtn.style.display = 'block';
-      }
-    }
+    <div id="scanResult" class="result-box" style="display:none;">
+      <div class="result-title">Hasil Pembacaan:</div>
+      <div id="resultText"></div>
+      <div id="wifiDetails" class="wifi-details" style="display:none;"></div>
+    </div>
+  </div>
 
-    function bukaWAWeb() {
-      window.open('https://web.whatsapp.com', '_blank');
+  <!-- FOOTER KEPEMILIKAN WEBSITE -->
+  <div class="footer">
+    <p>Dikembangkan & Dimiliki oleh:</p>
+    <p class="owner-title">DESHATOR</p>
+    <p>IG: <span class="owner-ig">RMN.TMS.TYNP3</span></p>
+  </div>
+</div>
+
+<script>
+  let html5QrcodeScanner = null;
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+
+    if(tab === 'generate') {
+      document.querySelectorAll('.tab-btn')[0].classList.add('active');
+      document.getElementById('section-generate').classList.add('active');
+      stopScanner();
+    } else {
+      document.querySelectorAll('.tab-btn')[1].classList.add('active');
+      document.getElementById('section-scan').classList.add('active');
     }
-  </script>
+  }
+
+  // Buat QR dari Teks
+  function generateTextQR() {
+    const text = document.getElementById('textInput').value.trim();
+    if(!text) return alert("Masukkan teks atau link terlebih dahulu!");
+    renderQR(text);
+  }
+
+  // Buat QR dari File Foto
+  function generateImageQR() {
+    const fileInput = document.getElementById('imageInput');
+    if(!fileInput.files || fileInput.files.length === 0) return alert("Pilih foto terlebih dahulu!");
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      renderQR(e.target.result);
+    };
+    reader.readAsDataURL(fileInput.files[0]);
+  }
+
+  // Render QR ke Layar
+  function renderQR(data) {
+    const box = document.getElementById('qrcode-box');
+    const container = document.getElementById('qrcode');
+    container.innerHTML = "";
+    box.style.display = "flex";
+
+    new QRCode(container, {
+      text: data,
+      width: 180,
+      height: 180,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.H
+    });
+  }
+
+  // Download Hasil QR
+  function downloadQR() {
+    const img = document.querySelector('#qrcode img');
+    if(img) {
+      const link = document.createElement('a');
+      link.href = img.src;
+      link.download = 'qr-code.png';
+      link.click();
+    }
+  }
+
+  // Mulai Kamera Scanner
+  function startScanner() {
+    document.getElementById('startBtn').style.display = "none";
+    document.getElementById('stopBtn').style.display = "block";
+
+    html5QrcodeScanner = new Html5Qrcode("reader");
+    html5QrcodeScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 220, height: 220 } },
+      onScanSuccess,
+      onScanFailure
+    );
+  }
+
+  // Matikan Scanner
+  function stopScanner() {
+    if(html5QrcodeScanner) {
+      html5QrcodeScanner.stop().then(() => {
+        document.getElementById('startBtn').style.display = "block";
+        document.getElementById('stopBtn').style.display = "none";
+      }).catch(err => console.error(err));
+    }
+  }
+
+  // Sukses Membaca QR
+  function onScanSuccess(decodedText) {
+    const resultBox = document.getElementById('scanResult');
+    const resultText = document.getElementById('resultText');
+    const wifiBox = document.getElementById('wifiDetails');
+
+    resultBox.style.display = "block";
+    resultText.innerText = decodedText;
+
+    // Cek Apakah QR berisi Format Wi-Fi
+    if(decodedText.startsWith("WIFI:")) {
+      wifiBox.style.display = "block";
+      
+      const ssidMatch = decodedText.match(/S:(.*?);/);
+      const passMatch = decodedText.match(/P:(.*?);/);
+      const typeMatch = decodedText.match(/T:(.*?);/);
+
+      const ssid = ssidMatch ? ssidMatch[1] : "Tidak diketahui";
+      const pass = passMatch ? passMatch[1] : "Tanpa Kata Sandi / Open";
+      const type = typeMatch ? typeMatch[1] : "WPA";
+
+      wifiBox.innerHTML = `
+        <div style="color:#38bdf8; font-weight:bold; margin-bottom:5px;">📶 Informasi Wi-Fi Terdeteksi:</div>
+        <p><b>Nama Wi-Fi (SSID):</b> ${ssid}</p>
+        <p><b>Kata Sandi (Password):</b> <span style="background:#0f172a; padding:2px 6px; border-radius:4px; font-family:monospace; color:#22c55e;">${pass}</span></p>
+        <p><b>Keamanan:</b> ${type}</p>
+      `;
+    } else {
+      wifiBox.style.display = "none";
+    }
+  }
+
+  function onScanFailure(error) {
+    // Membiarkan pencarian tetap berjalan
+  }
+</script>
 
 </body>
 </html>
