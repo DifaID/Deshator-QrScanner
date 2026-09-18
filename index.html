@@ -36,7 +36,10 @@
     #qrcode-box { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 20px; padding: 15px; background: #fff; border-radius: 12px; width: fit-content; margin-left: auto; margin-right: auto; }
     #qrcode img, #qrcode canvas { display: block; }
     
-    #reader { width: 100%; border-radius: 12px; overflow: hidden; background: #0f172a; border: 1px solid #334155; }
+    /* Perbaikan responsif area scanner */
+    .reader-wrapper { width: 100%; border-radius: 12px; overflow: hidden; background: #0f172a; border: 1px solid #334155; display: flex; justify-content: center; align-items: center; }
+    #reader { width: 100%; max-height: 70vh; overflow: hidden; }
+    #reader img, #reader video { max-width: 100% !important; height: auto !important; object-fit: contain !important; margin: 0 auto; display: block; }
     
     .result-box { margin-top: 15px; padding: 15px; background: #0f172a; border-radius: 8px; border: 1px solid #334155; word-break: break-all; }
     .result-title { font-size: 0.8rem; color: #38bdf8; font-weight: bold; margin-bottom: 5px; }
@@ -90,8 +93,10 @@
 
   <!-- SEKSI SCANNER QR -->
   <div id="section-scan" class="content-section">
-    <!-- SCANNER KAMERA -->
-    <div id="reader"></div>
+    <!-- SCANNER KAMERA ERA -->
+    <div class="reader-wrapper">
+      <div id="reader"></div>
+    </div>
     <button id="stopBtn" onclick="stopScanner()" style="display:none; background: #dc2626; margin-top: 10px; width:100%;">Matikan Kamera</button>
     <button id="startBtn" onclick="startScanner()" style="margin-top: 10px; width:100%;">Buka Kamera Scanner</button>
 
@@ -219,7 +224,7 @@
     });
   }
 
-  // Perbaikan Fitur Download Gambar QR Langsung ke HP
+  // Download Gambar QR
   function downloadQR() {
     const imgElement = document.querySelector('#qrcode img');
     const canvasElement = document.querySelector('#qrcode canvas');
@@ -283,7 +288,7 @@
       });
   }
 
-  // Sukses Membaca QR (Kamera & Galeri)
+  // Sukses Membaca QR
   function onScanSuccess(decodedText) {
     const resultBox = document.getElementById('scanResult');
     const resultText = document.getElementById('resultText');
