@@ -60,6 +60,9 @@
       align-items: center;
       min-height: 120px;
       overflow-x: auto;
+      background: #ffffff;
+      padding: 10px;
+      border-radius: 8px;
     }
 
     /* Target render canvas & svg */
@@ -67,6 +70,7 @@
       max-width: 100%;
       height: auto;
       display: block;
+      background-color: #ffffff;
     }
 
     .reader-wrapper { width: 100%; border-radius: 12px; overflow: hidden; background: #0f172a; border: 1px solid #334155; display: flex; justify-content: center; align-items: center; }
@@ -133,10 +137,10 @@
       </div>
     </div>
 
-    <!-- AREA OUTPUT GEMBAR -->
+    <!-- AREA OUTPUT GAMBAR -->
     <div id="barcode-wrapper" style="display:none;">
       <div class="output-box" id="outputBox"></div>
-      <button onclick="downloadCode()" style="margin-top: 15px; background: #16a34a; width:100%;">Download Gambar</button>
+      <button onclick="downloadCodeWithWhiteBg()" style="margin-top: 15px; background: #16a34a; width:100%;">Download Gambar (Background Putih)</button>
     </div>
 
   </div>
@@ -258,12 +262,13 @@
         const canvas = document.createElement('canvas');
         box.appendChild(canvas);
         bwipjs.toCanvas(canvas, {
-          bcid: type,        // datamatrix atau pdf417
+          bcid: type,
           text: data,
           scale: 3,
           height: type === 'pdf417' ? 12 : undefined,
           includetext: true,
           textxalign: 'center',
+          backgroundcolor: 'ffffff' // Memastikan latar belakang bawaan berwarna putih
         });
       } 
       else {
@@ -271,7 +276,6 @@
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         box.appendChild(svg);
         
-        // Pembersihan karakter khusus untuk jenis barcode bernomor (UPC/ITF)
         let formattedData = data;
         if (type === "UPC") {
           formattedData = data.replace(/\D/g, '');
@@ -295,36 +299,59 @@
     }
   }
 
-  function downloadCode() {
+  // FUNGSI UTAMA DOWNLOAD DENGAN BACKGROUND PUTIH SOLID
+  function downloadCodeWithWhiteBg() {
     const box = document.getElementById('outputBox');
-    const canvas = box.querySelector('canvas');
-    const img = box.querySelector('img');
-    const svg = box.querySelector('svg');
+    const sourceCanvas = box.querySelector('canvas');
+    const sourceImg = box.querySelector('img');
+    const sourceSvg = box.querySelector('svg');
 
-    let downloadUrl = "";
-
-    if (canvas) {
-      downloadUrl = canvas.toDataURL("image/png");
-      triggerDownload(downloadUrl);
-    } else if (img) {
-      downloadUrl = img.src;
-      triggerDownload(downloadUrl);
-    } else if (svg) {
-      const svgData = new XMLSerializer().serializeToString(svg);
-      const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-      const SVGURL = window.URL || window.webkitURL || window;
-      downloadUrl = SVGURL.createObjectURL(svgBlob);
-      triggerDownload(downloadUrl);
+    // Jika sumber berupa SVG (Barcode 1D)
+    if (sourceSvg) {
+      const xml = new XMLSerializer().serializeToString(sourceSvg);
+      const svgBase64 = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(xml)));
+      const tempImg = new Image();
+      
+      tempImg.onload = function() {
+        processAndDownloadImage(tempImg, tempImg.width || 300, tempImg.height || 150);
+      };
+      tempImg.src = svgBase64;
+    } 
+    // Jika sumber berupa Canvas atau Img (2D / QR)
+    else if (sourceCanvas || sourceImg) {
+      const tempImg = new Image();
+      tempImg.onload = function() {
+        processAndDownloadImage(tempImg, tempImg.width, tempImg.height);
+      };
+      tempImg.src = sourceCanvas ? sourceCanvas.toDataURL("image/png") : sourceImg.src;
+    } else {
+      alert("Belum ada kode yang dihasilkan untuk diunduh!");
     }
   }
 
-  function triggerDownload(url) {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'DESHATOR_Barcode.png';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  // Proses pelapisan warna putih pada background canvas sebelum disimpan
+  function processAndDownloadImage(imgElement, width, height) {
+    const padding = 20; // Memberi margin putih di sekeliling gambar
+    const canvas = document.createElement('canvas');
+    canvas.width = width + (padding * 2);
+    canvas.height = height + (padding * 2);
+    const ctx = canvas.getContext('2d');
+
+    // 1. Isikan warna putih ke seluruh permukaan latar belakang
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 2. Gambar kode barcode/QR di atas latar belakang putih
+    ctx.drawImage(imgElement, padding, padding, width, height);
+
+    // 3. Konversi ke data PNG & jalankan proses unduh
+    const imageURI = canvas.toDataURL("image/png");
+    const link = document.createElement('a');
+    link.href = imageURI;
+    link.download = 'DESHATOR_Code_WhiteBG.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   function clearText() {
