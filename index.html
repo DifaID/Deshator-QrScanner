@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QR Code Studio & Scanner - DESHATOR</title>
-  <!-- Library QR Code Styling untuk Dukungan Pola Garis -->
-  <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.8/lib/qr-code-styling.js"></script>
+  <!-- Library QR Code Stabil & Scanner -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -34,10 +34,64 @@
     button.danger { background: #dc2626; flex: 0.4; }
     button.danger:hover { background: #b91c1c; }
 
-    #qrcode-box { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 20px; padding: 15px; background: #fff; border-radius: 12px; width: fit-content; margin-left: auto; margin-right: auto; }
-    #qrcode img, #qrcode canvas { display: block; }
-    
-    /* Area responsive scanner */
+    /* Box Wadah QR Code */
+    #qrcode-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+      padding: 15px;
+      background: #ffffff;
+      border-radius: 12px;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Container Tempat Render Canvas QR */
+    .qr-container {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #fff;
+    }
+
+    #qrcode canvas, #qrcode img {
+      width: 200px !important;
+      height: 200px !important;
+      display: block;
+    }
+
+    /* Efek Garis-Garis (Lines Style) via CSS Pattern Overlay */
+    .qr-container.style-lines::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        #ffffff 3px,
+        #ffffff 5px
+      );
+      pointer-events: none;
+    }
+
+    /* Efek Titik-Titik (Dots Style) via CSS Pattern Overlay */
+    .qr-container.style-dots::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(circle, transparent 40%, #ffffff 45%);
+      background-size: 6px 6px;
+      pointer-events: none;
+    }
+
+    /* Area Responsive Scanner Kamera */
     .reader-wrapper { width: 100%; border-radius: 12px; overflow: hidden; background: #0f172a; border: 1px solid #334155; display: flex; justify-content: center; align-items: center; }
     #reader { width: 100%; max-height: 70vh; overflow: hidden; }
     #reader img, #reader video { max-width: 100% !important; height: auto !important; object-fit: contain !important; margin: 0 auto; display: block; }
@@ -99,9 +153,12 @@
       </div>
     </div>
 
-    <div id="qrcode-box" style="display:none;">
-      <div id="qrcode"></div>
-      <button onclick="downloadQR()" style="margin-top: 10px; background: #16a34a; width:100%;">Download Gambar QR</button>
+    <!-- TAMPILAN HASIL GENERATE QR -->
+    <div id="qrcode-wrapper" style="display:none;">
+      <div id="qrContainer" class="qr-container">
+        <div id="qrcode"></div>
+      </div>
+      <button onclick="downloadQR()" style="margin-top: 15px; background: #16a34a; width:100%;">Download Gambar QR</button>
     </div>
   </div>
 
@@ -138,7 +195,7 @@
 
 <script>
   let html5QrcodeScanner = null;
-  let qrCodeStylingObj = null;
+  let currentQRCode = null;
 
   function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -167,7 +224,7 @@
     hideQR();
   }
 
-  // Buat QR dari File Foto
+  // Buat QR dari File Foto (Dengan kompresi agar teks tidak terlalu panjang)
   function generateImageQR() {
     const fileInput = document.getElementById('imageInput');
     if(!fileInput.files || fileInput.files.length === 0) return alert("Pilih foto dari galeri terlebih dahulu!");
@@ -181,7 +238,9 @@
       img.onload = function() {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        const maxDim = 80; 
+        
+        // Ukuran kecil agar karakter string Base64 muat dalam batas maksimum QR Code
+        const maxDim = 50; 
         let width = img.width;
         let height = img.height;
 
@@ -201,7 +260,7 @@
         canvas.height = height;
         ctx.drawImage(img, 0, 0, width, height);
 
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.2);
         renderQR(compressedBase64);
       }
     };
@@ -216,47 +275,86 @@
 
   // Sembunyikan Tampilan QR
   function hideQR() {
-    document.getElementById('qrcode-box').style.display = "none";
+    document.getElementById('qrcode-wrapper').style.display = "none";
     document.getElementById('qrcode').innerHTML = "";
   }
 
-  // Render QR ke Layar (Mendukung Opsi Garis/Lines)
+  // Render QR Utama
   function renderQR(data) {
-    const box = document.getElementById('qrcode-box');
+    const wrapper = document.getElementById('qrcode-wrapper');
     const container = document.getElementById('qrcode');
+    const qrContainer = document.getElementById('qrContainer');
     const selectedStyle = document.getElementById('qrStyleSelect').value;
 
     container.innerHTML = "";
-    box.style.display = "flex";
+    wrapper.style.display = "flex";
 
-    qrCodeStylingObj = new QRCodeStyling({
-      width: 210,
-      height: 210,
-      type: "canvas",
-      data: data,
-      dotsOptions: {
-        color: "#000000",
-        type: selectedStyle // "square", "lines", atau "dots"
-      },
-      cornersSquareOptions: {
-        type: selectedStyle === "lines" ? "extra-rounded" : "square",
-        color: "#000000"
-      },
-      backgroundOptions: {
-        color: "#ffffff"
-      }
+    // Pasang Class Gaya (Lines / Dots / Square)
+    qrContainer.className = "qr-container style-" + selectedStyle;
+
+    // Render QR Code standar yang pasti berhasil
+    currentQRCode = new QRCode(container, {
+      text: data,
+      width: 200,
+      height: 200,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.L
     });
-
-    qrCodeStylingObj.append(container);
   }
 
-  // Download Gambar QR
+  // Download Gambar QR Langsung ke Simpanan HP
   function downloadQR() {
-    if (qrCodeStylingObj) {
-      qrCodeStylingObj.download({ name: "QR_Code_DESHATOR", extension: "png" });
-    } else {
-      alert("Gagal mengunduh, buat QR code terlebih dahulu!");
+    const qrContainer = document.getElementById('qrContainer');
+    const selectedStyle = document.getElementById('qrStyleSelect').value;
+    
+    // Ambil elemen Canvas/Img asli dari QRCode.js
+    const originalCanvas = document.querySelector('#qrcode canvas');
+    const originalImg = document.querySelector('#qrcode img');
+
+    if (!originalCanvas && !originalImg) {
+      return alert("Gagal mengunduh, buat QR code terlebih dahulu!");
     }
+
+    // Buat Canvas Gabungan untuk Hasil Download Termasuk Efek Garis
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = 200;
+    exportCanvas.height = 200;
+    const ctx = exportCanvas.getContext('2d');
+
+    // Gambar QR Asli ke Canvas Gabungan
+    if (originalCanvas) {
+      ctx.drawImage(originalCanvas, 0, 0, 200, 200);
+    } else if (originalImg) {
+      ctx.drawImage(originalImg, 0, 0, 200, 200);
+    }
+
+    // Jika memilih Gaya Garis (Lines), timpa garis horizontal warna putih ke gambar download
+    if (selectedStyle === 'lines') {
+      ctx.fillStyle = "#ffffff";
+      for (let y = 0; y < 200; y += 5) {
+        ctx.fillRect(0, y, 200, 2);
+      }
+    } else if (selectedStyle === 'dots') {
+      // Jika memilih Gaya Dots
+      ctx.fillStyle = "#ffffff";
+      for (let x = 0; x < 200; x += 6) {
+        for (let y = 0; y < 200; y += 6) {
+          ctx.beginPath();
+          ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    // Konversi ke Data URL PNG & Unduh
+    const imageURI = exportCanvas.toDataURL("image/png");
+    const link = document.createElement('a');
+    link.href = imageURI;
+    link.download = 'QR_Code_DESHATOR.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   // Mulai Kamera Scanner
@@ -273,7 +371,7 @@
     );
   }
 
-  // Matikan Scanner
+  // Matikan Scanner Kamera
   function stopScanner() {
     if(html5QrcodeScanner) {
       html5QrcodeScanner.stop().then(() => {
@@ -296,7 +394,7 @@
         onScanSuccess(decodedText);
       })
       .catch(err => {
-        alert("Gagal membaca QR Code dari gambar ini. Pastikan gambar QR jernih.");
+        alert("Gagal membaca QR Code dari gambar ini. Pastikan gambar QR jelas.");
       });
   }
 
@@ -340,7 +438,7 @@
   }
 
   function onScanFailure(error) {
-    // Membiarkan pencarian tetap berjalan
+    // Membiarkan pemindaian berjalan terus
   }
 </script>
 
